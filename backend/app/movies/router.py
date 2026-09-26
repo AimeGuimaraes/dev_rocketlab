@@ -2,21 +2,23 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.schemas import Page
-from app.core.errors import NotFoundError
+from app.core.errors import InvalidReferenceError, NotFoundError
 from app.db.session import get_db
 from app.movies import service
 from app.movies.schemas import (
     DEFAULT_PAGE_SIZE,
     MAX_PAGE_SIZE,
     MAX_QUERY_LENGTH,
+    MovieCreate,
     MovieDetail,
     MovieFilters,
     MovieListItem,
     MovieSort,
+    MovieUpdate,
     SortOrder,
 )
 
@@ -63,5 +65,61 @@ async def get_movie(
 ) -> MovieDetail:
     try:
         return await service.get_movie(session, sk_movie_id)
+    except NotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post(
+    "",
+    response_model=MovieDetail,
+    status_code=status.HTTP_201_CREATED,
+    summary="Cadastrar filme",
+    responses={422: {"description": "Dados inválidos ou gênero inexistente"}},
+)
+async def create_movie(
+    session: Annotated[AsyncSession, Depends(get_db)],
+    data: MovieCreate,
+) -> MovieDetail:
+    try:
+        return await service.create_movie(session, data)
+    except InvalidReferenceError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@router.patch(
+    "/{sk_movie_id}",
+    response_model=MovieDetail,
+    summary="Atualizar filme (parcial)",
+    responses={
+        404: {"description": "Filme não encontrado"},
+        422: {"description": "Dados inválidos ou gênero inexistente"},
+    },
+)
+async def update_movie(
+    session: Annotated[AsyncSession, Depends(get_db)],
+    sk_movie_id: str,
+    data: MovieUpdate,
+) -> MovieDetail:
+    try:
+        return await service.update_movie(session, sk_movie_id, data)
+    except NotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except InvalidReferenceError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@router.delete(
+    "/{sk_movie_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+    summary="Remover filme",
+    responses={404: {"description": "Filme não encontrado"}},
+)
+async def delete_movie(
+    session: Annotated[AsyncSession, Depends(get_db)],
+    sk_movie_id: str,
+) -> None:
+    try:
+        await service.delete_movie(session, sk_movie_id)
     except NotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc

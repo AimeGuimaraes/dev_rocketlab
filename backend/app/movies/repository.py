@@ -2,11 +2,18 @@
 
 from typing import Any
 
-from sqlalchemy import Select, exists, func, select
+from sqlalchemy import Select, delete, exists, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
-from app.movies.models import DimMovie, DimReview, FactMoviePerformance, bridge_movie_genre
+from app.movies.models import (
+    DimGenre,
+    DimMovie,
+    DimPerson,
+    DimReview,
+    FactMoviePerformance,
+    bridge_movie_genre,
+)
 from app.movies.schemas import MovieFilters, MovieSort, SortOrder
 
 _SORT_COLUMNS = {
@@ -101,5 +108,41 @@ async def get_movie(session: AsyncSession, sk_movie_id: str) -> DimMovie | None:
             selectinload(DimMovie.companies),
             selectinload(DimMovie.people),
         )
+        # Recarrega do banco mesmo se o filme já estiver na sessão (ex.: logo após um commit).
+        .execution_options(populate_existing=True)
     )
     return await session.scalar(stmt)
+
+
+async def get_genres_by_ids(session: AsyncSession, sk_genre_ids: list[str]) -> list[DimGenre]:
+    """Busca os gêneros com os ids informados (os inexistentes simplesmente não vêm)."""
+
+    if not sk_genre_ids:
+        return []
+    result = await session.scalars(select(DimGenre).where(DimGenre.sk_genre_id.in_(sk_genre_ids)))
+    return list(result)
+
+
+async def get_directors_by_names(session: AsyncSession, names: list[str]) -> list[DimPerson]:
+    """Busca as pessoas do tipo ``Diretor`` com os nomes informados."""
+
+    if not names:
+        return []
+    result = await session.scalars(
+        select(DimPerson).where(
+            DimPerson.tipo_pessoa == "Diretor", DimPerson.nome_pessoa.in_(names)
+        )
+    )
+    return list(result)
+
+
+async def delete_movie(session: AsyncSession, sk_movie_id: str) -> bool:
+    """Apaga o filme; devolve ``False`` se ele não existir.
+
+    O ``DELETE`` é feito direto no banco: bridges, performance, resumo e avaliações somem
+    pelo ``ON DELETE CASCADE`` das FKs (com ``PRAGMA foreign_keys=ON``), sem o ORM precisar
+    carregar esses relacionamentos.
+    """
+
+    result = await session.execute(delete(DimMovie).where(DimMovie.sk_movie_id == sk_movie_id))
+    return result.rowcount > 0
