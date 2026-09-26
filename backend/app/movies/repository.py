@@ -4,7 +4,7 @@ from typing import Any
 
 from sqlalchemy import Select, exists, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload, selectinload
 
 from app.movies.models import DimMovie, DimReview, FactMoviePerformance, bridge_movie_genre
 from app.movies.schemas import MovieFilters, MovieSort, SortOrder
@@ -82,3 +82,24 @@ async def list_movies(
     )
     result = await session.execute(_apply_filters(stmt, filters))
     return [(movie, media, quantidade) for movie, media, quantidade in result]
+
+
+async def get_movie(session: AsyncSession, sk_movie_id: str) -> DimMovie | None:
+    """Busca um filme com todos os relacionamentos usados no detalhe.
+
+    Performance e resumo de avaliações (1:1) vêm por ``LEFT JOIN`` na mesma consulta;
+    gêneros, produtoras e pessoas vêm em uma consulta extra cada (``selectinload``).
+    """
+
+    stmt = (
+        select(DimMovie)
+        .where(DimMovie.sk_movie_id == sk_movie_id)
+        .options(
+            joinedload(DimMovie.performance),
+            joinedload(DimMovie.reviews_summary),
+            selectinload(DimMovie.genres),
+            selectinload(DimMovie.companies),
+            selectinload(DimMovie.people),
+        )
+    )
+    return await session.scalar(stmt)

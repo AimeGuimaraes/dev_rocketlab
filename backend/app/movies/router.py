@@ -2,16 +2,18 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.schemas import Page
+from app.core.errors import NotFoundError
 from app.db.session import get_db
 from app.movies import service
 from app.movies.schemas import (
     DEFAULT_PAGE_SIZE,
     MAX_PAGE_SIZE,
     MAX_QUERY_LENGTH,
+    MovieDetail,
     MovieFilters,
     MovieListItem,
     MovieSort,
@@ -47,3 +49,19 @@ async def list_movies(
     return await service.list_movies(
         session, page=page, page_size=page_size, filters=filters, sort=sort, order=order
     )
+
+
+@router.get(
+    "/{sk_movie_id}",
+    response_model=MovieDetail,
+    summary="Detalhe do filme",
+    responses={404: {"description": "Filme não encontrado"}},
+)
+async def get_movie(
+    session: Annotated[AsyncSession, Depends(get_db)],
+    sk_movie_id: str,
+) -> MovieDetail:
+    try:
+        return await service.get_movie(session, sk_movie_id)
+    except NotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
