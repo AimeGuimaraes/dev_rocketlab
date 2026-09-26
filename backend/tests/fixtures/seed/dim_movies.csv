@@ -1,0 +1,4 @@
+sk_movie_id,id_filme,titulo,data_lancamento,ano_lancamento,duracao_minutos,status_filme,sinopse,url_poster,url_backdrop
+d000000000000000000000000000000000000000000000000000000000000001,teste-0001,Filme Fictício Um,2001-02-03,2001,101,Released,"Sinopse inventada, com vírgula.",https://example.com/p1.jpg,https://example.com/b1.jpg
+d000000000000000000000000000000000000000000000000000000000000002,teste-0002,Filme Fictício Dois,2010-05-06,2010,95,Released,Outra sinopse inventada.,https://example.com/p2.jpg,
+d000000000000000000000000000000000000000000000000000000000000003,teste-0003,Filme Fictício Três,,,,Rumored,,,

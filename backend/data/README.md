@@ -47,6 +47,22 @@ duplicado nas bridges, e cada filme tem exatamente uma linha na fact.
 - Os tamanhos e domínios cabem nos modelos: `tipo_pessoa` ∈ {Ator, Diretor, Roteirista},
   `nota` ∈ [0, 10], textos abaixo dos limites de `String`.
 
+## Como carregar
+
+Com os CSVs nesta pasta, rode a partir de `backend/` (Windows: binários em `.venv\Scripts\`):
+
+```powershell
+.venv\Scripts\alembic upgrade head      # cria o schema
+.venv\Scripts\python -m app.cli.seed    # carrega os CSVs
+```
+
+- A carga lê os arquivos em streaming, insere em lotes de 5.000 linhas numa única
+  transação e loga a contagem por tabela e o tempo total (alguns minutos).
+- Se o banco já tiver dados, o seed avisa e sai sem alterar nada. Para apagar tudo e
+  recarregar: `python -m app.cli.seed --reset`.
+- `--data-dir CAMINHO` usa CSVs de outra pasta (padrão: `backend/data/`).
+- `dim_reviews` é gerado no fim a partir de `movie_reviews` (40.267 resumos).
+
 ## Decisões
 
 1. **`dim_reviews.csv` não é importado.** Ao final do seed, `dim_reviews` (quantidade e
