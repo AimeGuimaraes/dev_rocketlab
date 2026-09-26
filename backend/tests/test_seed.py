@@ -9,13 +9,7 @@ from sqlalchemy import Engine, func, select
 from app.cli.seed import create_seed_engine, seed
 from app.db.base import Base
 from app.movies.models import DimMovie, DimReview, FactMoviePerformance
-from tests.db_utils import migrate_database
-
-FIXTURES_DIR = Path(__file__).parent / "fixtures" / "seed"
-
-M1 = "d" + "1".rjust(63, "0")
-M2 = "d" + "2".rjust(63, "0")
-M3 = "d" + "3".rjust(63, "0")
+from tests.db_utils import FIXTURES_DIR, M1, M2, M3, migrate_database
 
 EXPECTED_COUNTS = {
     "dim_genres": 2,

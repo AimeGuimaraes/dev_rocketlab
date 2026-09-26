@@ -9,6 +9,12 @@ from alembic.config import Config
 from app.core.config import get_settings
 
 MIGRATIONS_DIR = Path(__file__).resolve().parents[1] / "migrations"
+FIXTURES_DIR = Path(__file__).parent / "fixtures" / "seed"
+
+# sk_movie_id dos filmes dos mini-CSVs de seed.
+M1 = "d" + "1".rjust(63, "0")  # "Filme Fictício Um": 2 gêneros, 2 avaliações (média 7)
+M2 = "d" + "2".rjust(63, "0")  # "Filme Fictício Dois": 1 gênero, 1 avaliação (média 10)
+M3 = "d" + "3".rjust(63, "0")  # "Filme Fictício Três": sem gêneros nem avaliações
 
 
 def migrate_database(db_path: Path) -> str:
