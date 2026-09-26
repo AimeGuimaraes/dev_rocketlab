@@ -1,9 +1,5 @@
-from collections.abc import Iterator
-
 import httpx
 import pytest
-from sqlalchemy import event
-from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tests.db_utils import M1, M2, M3
 
@@ -11,7 +7,7 @@ URL = "/api/v1/movies"
 
 
 async def test_list_movies_default_page_sorted_by_title(client: httpx.AsyncClient) -> None:
-    response = await client.get(URL)
+    response = await client.get(URL, params={"sort": "titulo"})
 
     assert response.status_code == 200
     body = response.json()
@@ -29,8 +25,9 @@ async def test_list_movies_default_page_sorted_by_title(client: httpx.AsyncClien
 
 
 async def test_list_movies_paginates(client: httpx.AsyncClient) -> None:
-    first = (await client.get(URL, params={"page": 1, "page_size": 2})).json()
-    last = (await client.get(URL, params={"page": 2, "page_size": 2})).json()
+    params = {"sort": "titulo", "page_size": 2}
+    first = (await client.get(URL, params={**params, "page": 1})).json()
+    last = (await client.get(URL, params={**params, "page": 2})).json()
 
     assert (first["total"], first["pages"], first["page_size"]) == (3, 2, 2)
     assert [item["sk_movie_id"] for item in first["items"]] == [M2, M3]
@@ -98,20 +95,6 @@ async def test_list_movies_item_without_reviews(client: httpx.AsyncClient) -> No
     assert movie["generos"] == []
     assert movie["ano_lancamento"] is None
     assert movie["url_poster"] is None
-
-
-@pytest.fixture
-def statements(engine: AsyncEngine) -> Iterator[list[str]]:
-    """Registra os comandos SQL executados no banco de teste."""
-
-    executed: list[str] = []
-
-    def _record(conn: object, cursor: object, statement: str, *args: object) -> None:
-        executed.append(statement)
-
-    event.listen(engine.sync_engine, "before_cursor_execute", _record)
-    yield executed
-    event.remove(engine.sync_engine, "before_cursor_execute", _record)
 
 
 async def test_list_movies_avoids_n_plus_one(

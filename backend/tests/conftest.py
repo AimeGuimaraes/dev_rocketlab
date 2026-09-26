@@ -1,11 +1,12 @@
 """Fixtures compartilhadas: banco SQLite temporário migrado, populado e ligado à API."""
 
 import shutil
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Iterator
 from pathlib import Path
 
 import httpx
 import pytest
+from sqlalchemy import event
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -66,3 +67,17 @@ async def client(engine: AsyncEngine) -> AsyncIterator[httpx.AsyncClient]:
             yield client
     finally:
         app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.fixture
+def statements(engine: AsyncEngine) -> Iterator[list[str]]:
+    """Registra os comandos SQL executados no banco de teste."""
+
+    executed: list[str] = []
+
+    def _record(conn: object, cursor: object, statement: str, *args: object) -> None:
+        executed.append(statement)
+
+    event.listen(engine.sync_engine, "before_cursor_execute", _record)
+    yield executed
+    event.remove(engine.sync_engine, "before_cursor_execute", _record)

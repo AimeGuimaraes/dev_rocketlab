@@ -4,14 +4,36 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.schemas import Page
 from app.movies import repository
-from app.movies.schemas import MovieListItem
+from app.movies.schemas import DEFAULT_ORDER, MovieFilters, MovieListItem, MovieSort, SortOrder
 
 
-async def list_movies(session: AsyncSession, page: int, page_size: int) -> Page[MovieListItem]:
-    """Devolve uma página do catálogo ordenado por título."""
+async def list_movies(
+    session: AsyncSession,
+    page: int,
+    page_size: int,
+    filters: MovieFilters,
+    sort: MovieSort = MovieSort.popularidade,
+    order: SortOrder | None = None,
+) -> Page[MovieListItem]:
+    """Devolve uma página do catálogo filtrado e ordenado.
 
-    total = await repository.count_movies(session)
-    rows = await repository.list_movies(session, offset=(page - 1) * page_size, limit=page_size)
+    Sem ``order``, usa a direção padrão do campo (``titulo`` crescente, demais decrescente).
+    Uma busca ``q`` vazia ou só com espaços é ignorada.
+    """
+
+    q = filters.q.strip() if filters.q is not None else None
+    filters = MovieFilters(q=q or None, genre_id=filters.genre_id, year=filters.year)
+    order = order or DEFAULT_ORDER[sort]
+
+    total = await repository.count_movies(session, filters)
+    rows = await repository.list_movies(
+        session,
+        filters,
+        sort=sort,
+        order=order,
+        offset=(page - 1) * page_size,
+        limit=page_size,
+    )
     items = [
         MovieListItem(
             sk_movie_id=movie.sk_movie_id,
