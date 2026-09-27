@@ -1,12 +1,11 @@
 """Regras de negócio do domínio de filmes."""
 
-from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
 from uuid import uuid4
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.schemas import Page
+from app.common.transaction import transaction
 from app.core.errors import InvalidReferenceError, NotFoundError
 from app.movies import repository
 from app.movies.models import DimGenre, DimMovie, DimPerson
@@ -82,7 +81,7 @@ async def create_movie(session: AsyncSession, data: MovieCreate) -> MovieDetail:
     avaliações. Levanta ``InvalidReferenceError`` se algum gênero não existir.
     """
 
-    async with _transaction(session):
+    async with transaction(session):
         genres = await _resolve_genres(session, data.genre_ids)
         directors = await _get_or_create_directors(session, data.diretores)
         movie = DimMovie(
@@ -104,7 +103,7 @@ async def update_movie(session: AsyncSession, sk_movie_id: str, data: MovieUpdat
     """
 
     changes = data.changes()
-    async with _transaction(session):
+    async with transaction(session):
         movie = await _get_movie_or_404(session, sk_movie_id)
         if "genre_ids" in changes:
             movie.genres = await _resolve_genres(session, changes.pop("genre_ids"))
@@ -124,21 +123,9 @@ async def delete_movie(session: AsyncSession, sk_movie_id: str) -> None:
     existir.
     """
 
-    async with _transaction(session):
+    async with transaction(session):
         if not await repository.delete_movie(session, sk_movie_id):
             raise NotFoundError("Filme não encontrado.")
-
-
-@asynccontextmanager
-async def _transaction(session: AsyncSession) -> AsyncIterator[None]:
-    """Confirma a transação ao final do bloco ou desfaz tudo se houver erro."""
-
-    try:
-        yield
-        await session.commit()
-    except Exception:
-        await session.rollback()
-        raise
 
 
 async def _get_movie_or_404(session: AsyncSession, sk_movie_id: str) -> DimMovie:
