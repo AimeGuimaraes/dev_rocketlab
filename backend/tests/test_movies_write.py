@@ -158,7 +158,10 @@ async def test_create_movie_with_invalid_genre_creates_nothing(
     )
 
     assert response.status_code == 422
-    assert response.json() == {"detail": "Gênero(s) inexistente(s): x."}
+    assert response.json() == {
+        "detail": "Gênero(s) inexistente(s): x.",
+        "errors": [{"field": "genre_ids", "message": "Gênero(s) inexistente(s): x."}],
+    }
     assert await _count(engine, DimMovie) == movies_before
     assert await _count(engine, DimPerson) == people_before
 
@@ -280,7 +283,10 @@ async def test_patch_invalid_genre_changes_nothing(client: httpx.AsyncClient) ->
     )
 
     assert response.status_code == 422
-    assert response.json() == {"detail": "Gênero(s) inexistente(s): nao-existe."}
+    assert response.json() == {
+        "detail": "Gênero(s) inexistente(s): nao-existe.",
+        "errors": [{"field": "genre_ids", "message": "Gênero(s) inexistente(s): nao-existe."}],
+    }
     assert (await client.get(f"{URL}/{M1}")).json() == before
 
 
@@ -306,7 +312,7 @@ async def test_patch_not_found(client: httpx.AsyncClient) -> None:
     response = await client.patch(f"{URL}/nao-existe", json={"titulo": "X"})
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Filme não encontrado."}
+    assert response.json() == {"detail": "Filme não encontrado.", "errors": None}
 
 
 # --- DELETE -------------------------------------------------------------------------------
@@ -356,4 +362,4 @@ async def test_delete_not_found(client: httpx.AsyncClient) -> None:
     response = await client.delete(f"{URL}/nao-existe")
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Filme não encontrado."}
+    assert response.json() == {"detail": "Filme não encontrado.", "errors": None}

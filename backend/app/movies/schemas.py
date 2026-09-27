@@ -3,9 +3,16 @@
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
-from typing import Annotated, Any, Self
+from typing import Annotated, Any
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    ValidationInfo,
+    field_validator,
+)
 
 DEFAULT_PAGE_SIZE = 20
 MAX_PAGE_SIZE = 100
@@ -114,7 +121,22 @@ class MovieDetail(BaseModel):
 class MovieCreate(BaseModel):
     """Dados para cadastrar um filme. O ``id_filme`` é gerado pelo backend."""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(
+        extra="forbid",
+        json_schema_extra={
+            "examples": [
+                {
+                    "titulo": "O Filme",
+                    "diretores": ["Fulana de Tal"],
+                    "ano_lancamento": 2024,
+                    "genre_ids": ["<sk_genre_id>"],
+                    "sinopse": "Uma história sobre…",
+                    "duracao_minutos": 120,
+                    "data_lancamento": "2024-05-10",
+                }
+            ]
+        },
+    )
 
     titulo: Titulo
     diretores: list[NomePessoa] = Field(default_factory=list, description="Nomes dos diretores")
@@ -138,7 +160,10 @@ class MovieUpdate(BaseModel):
     ``genre_ids`` substitui todos os gêneros.
     """
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(
+        extra="forbid",
+        json_schema_extra={"examples": [{"sinopse": "Nova sinopse.", "duracao_minutos": 95}]},
+    )
 
     titulo: Titulo | None = None
     diretores: list[NomePessoa] | None = None
@@ -150,12 +175,14 @@ class MovieUpdate(BaseModel):
     url_poster: Url | None = None
     url_backdrop: Url | None = None
 
-    @model_validator(mode="after")
-    def _reject_explicit_nulls(self) -> Self:
-        for field in _NON_NULLABLE_UPDATE_FIELDS:
-            if field in self.model_fields_set and getattr(self, field) is None:
-                raise ValueError(f"O campo '{field}' não pode ser nulo.")
-        return self
+    # Só roda para valores enviados (campos omitidos não passam por validação), então rejeita
+    # apenas o ``null`` explícito e o erro aponta o próprio campo.
+    @field_validator(*_NON_NULLABLE_UPDATE_FIELDS)
+    @classmethod
+    def _reject_explicit_null(cls, value: Any, info: ValidationInfo) -> Any:
+        if value is None:
+            raise ValueError(f"O campo '{info.field_name}' não pode ser nulo.")
+        return value
 
     def changes(self) -> dict[str, Any]:
         """Campos enviados pelo cliente, com os valores já validados."""

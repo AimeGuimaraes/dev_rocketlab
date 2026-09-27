@@ -154,7 +154,9 @@ async def _resolve_genres(session: AsyncSession, sk_genre_ids: list[str]) -> lis
     found = {genre.sk_genre_id: genre for genre in await repository.get_genres_by_ids(session, ids)}
     missing = [genre_id for genre_id in ids if genre_id not in found]
     if missing:
-        raise InvalidReferenceError(f"Gênero(s) inexistente(s): {', '.join(missing)}.")
+        raise InvalidReferenceError(
+            f"Gênero(s) inexistente(s): {', '.join(missing)}.", field="genre_ids"
+        )
     return [found[genre_id] for genre_id in ids]
 
 

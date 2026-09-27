@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import httpx
@@ -215,7 +215,7 @@ async def test_create_review_movie_not_found(
     response = await client.post(_url("nao-existe"), json=VALID)
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Filme não encontrado."}
+    assert response.json() == {"detail": "Filme não encontrado.", "errors": None}
     assert await _count_reviews(engine) == before
 
 
@@ -302,7 +302,26 @@ async def test_list_reviews_movie_not_found(client: httpx.AsyncClient) -> None:
     response = await client.get(_url("nao-existe"))
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Filme não encontrado."}
+    assert response.json() == {"detail": "Filme não encontrado.", "errors": None}
+
+
+async def test_created_review_has_utc_created_at(client: httpx.AsyncClient) -> None:
+    body = await _post(client, M1, **VALID)
+
+    created_at = body["avaliacao"]["created_at"]
+    assert created_at.endswith("Z")
+    assert datetime.fromisoformat(created_at).tzinfo == UTC
+
+
+async def test_list_reviews_serializes_naive_created_at_as_utc(
+    client: httpx.AsyncClient, engine: AsyncEngine
+) -> None:
+    # Como o SQLite grava: UTC sem fuso.
+    await _insert_reviews(engine, M3, (1, datetime(2026, 9, 26, 22, 1, 47)))
+
+    page = (await client.get(_url(M3))).json()
+
+    assert page["items"][0]["created_at"] == "2026-09-26T22:01:47Z"
 
 
 async def test_list_reviews_uses_few_queries(

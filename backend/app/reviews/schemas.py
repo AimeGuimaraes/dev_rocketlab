@@ -1,10 +1,11 @@
 """Schemas Pydantic de entrada e saída do domínio de avaliações."""
 
-from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Annotated
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StringConstraints
+
+from app.common.schemas import UtcDatetime
 
 DEFAULT_PAGE_SIZE = 10
 MAX_PAGE_SIZE = 100
@@ -31,7 +32,12 @@ Nota = Annotated[float, Field(ge=0, le=10, allow_inf_nan=False), AfterValidator(
 class ReviewCreate(BaseModel):
     """Dados para avaliar um filme (nota de 0 a 10 e resenha)."""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(
+        extra="forbid",
+        json_schema_extra={
+            "examples": [{"nome": "Ana", "nota": 8.5, "comentario": "Roteiro excelente."}]
+        },
+    )
 
     nome: NomeAvaliador
     nota: Nota
@@ -47,7 +53,7 @@ class ReviewRead(BaseModel):
     nome: str
     nota: float
     comentario: str
-    created_at: datetime
+    created_at: UtcDatetime
 
 
 class ReviewCreated(BaseModel):

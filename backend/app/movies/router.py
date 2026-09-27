@@ -2,11 +2,10 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.common.schemas import Page
-from app.core.errors import InvalidReferenceError, NotFoundError
+from app.common.schemas import Page, not_found_response, validation_response
 from app.db.session import get_db
 from app.movies import service
 from app.movies.schemas import (
@@ -24,8 +23,18 @@ from app.movies.schemas import (
 
 router = APIRouter()
 
+_MOVIE_NOT_FOUND = not_found_response("Filme não encontrado")
+# Rotas só com o id no caminho: o FastAPI documenta um 422 por padrão; aqui no formato da API.
+_MOVIE_BY_ID = {**_MOVIE_NOT_FOUND, **validation_response()}
+_INVALID_MOVIE_DATA = validation_response("Dados inválidos ou gênero inexistente")
 
-@router.get("", response_model=Page[MovieListItem], summary="Catálogo paginado")
+
+@router.get(
+    "",
+    response_model=Page[MovieListItem],
+    summary="Catálogo paginado",
+    responses=validation_response("Parâmetros de consulta inválidos"),
+)
 async def list_movies(
     session: Annotated[AsyncSession, Depends(get_db)],
     page: Annotated[int, Query(ge=1, description="Página (começa em 1)")] = 1,
@@ -47,6 +56,8 @@ async def list_movies(
         Query(description="Direção; padrão desc, exceto para titulo (asc)"),
     ] = None,
 ) -> Page[MovieListItem]:
+    """Lista os filmes com busca por título, filtros por gênero e ano, e ordenação."""
+
     filters = MovieFilters(q=q, genre_id=genre_id, year=year)
     return await service.list_movies(
         session, page=page, page_size=page_size, filters=filters, sort=sort, order=order
@@ -57,16 +68,15 @@ async def list_movies(
     "/{sk_movie_id}",
     response_model=MovieDetail,
     summary="Detalhe do filme",
-    responses={404: {"description": "Filme não encontrado"}},
+    responses=_MOVIE_BY_ID,
 )
 async def get_movie(
     session: Annotated[AsyncSession, Depends(get_db)],
     sk_movie_id: str,
 ) -> MovieDetail:
-    try:
-        return await service.get_movie(session, sk_movie_id)
-    except NotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    """Devolve o filme com gêneros, pessoas, produtoras, performance e média das avaliações."""
+
+    return await service.get_movie(session, sk_movie_id)
 
 
 @router.post(
@@ -74,38 +84,31 @@ async def get_movie(
     response_model=MovieDetail,
     status_code=status.HTTP_201_CREATED,
     summary="Cadastrar filme",
-    responses={422: {"description": "Dados inválidos ou gênero inexistente"}},
+    responses=_INVALID_MOVIE_DATA,
 )
 async def create_movie(
     session: Annotated[AsyncSession, Depends(get_db)],
     data: MovieCreate,
 ) -> MovieDetail:
-    try:
-        return await service.create_movie(session, data)
-    except InvalidReferenceError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    """Cadastra um filme; diretores são reaproveitados pelo nome ou criados."""
+
+    return await service.create_movie(session, data)
 
 
 @router.patch(
     "/{sk_movie_id}",
     response_model=MovieDetail,
     summary="Atualizar filme (parcial)",
-    responses={
-        404: {"description": "Filme não encontrado"},
-        422: {"description": "Dados inválidos ou gênero inexistente"},
-    },
+    responses={**_MOVIE_NOT_FOUND, **_INVALID_MOVIE_DATA},
 )
 async def update_movie(
     session: Annotated[AsyncSession, Depends(get_db)],
     sk_movie_id: str,
     data: MovieUpdate,
 ) -> MovieDetail:
-    try:
-        return await service.update_movie(session, sk_movie_id, data)
-    except NotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-    except InvalidReferenceError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    """Altera só os campos enviados; ``diretores`` e ``genre_ids`` substituem as listas."""
+
+    return await service.update_movie(session, sk_movie_id, data)
 
 
 @router.delete(
@@ -113,13 +116,12 @@ async def update_movie(
     status_code=status.HTTP_204_NO_CONTENT,
     response_class=Response,
     summary="Remover filme",
-    responses={404: {"description": "Filme não encontrado"}},
+    responses=_MOVIE_BY_ID,
 )
 async def delete_movie(
     session: Annotated[AsyncSession, Depends(get_db)],
     sk_movie_id: str,
 ) -> None:
-    try:
-        await service.delete_movie(session, sk_movie_id)
-    except NotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    """Remove o filme junto com suas ligações, performance e avaliações."""
+
+    await service.delete_movie(session, sk_movie_id)

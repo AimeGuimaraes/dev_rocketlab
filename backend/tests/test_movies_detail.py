@@ -126,7 +126,7 @@ async def test_get_movie_detail_not_found(client: httpx.AsyncClient) -> None:
     response = await client.get(f"{URL}/nao-existe")
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Filme não encontrado."}
+    assert response.json() == {"detail": "Filme não encontrado.", "errors": None}
 
 
 async def test_get_movie_detail_uses_few_queries(

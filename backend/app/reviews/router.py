@@ -2,11 +2,10 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.common.schemas import Page
-from app.core.errors import NotFoundError
+from app.common.schemas import Page, not_found_response, validation_response
 from app.db.session import get_db
 from app.reviews import service
 from app.reviews.schemas import (
@@ -19,12 +18,14 @@ from app.reviews.schemas import (
 
 router = APIRouter()
 
+_MOVIE_NOT_FOUND = not_found_response("Filme não encontrado")
+
 
 @router.get(
     "/{sk_movie_id}/reviews",
     response_model=Page[ReviewRead],
     summary="Avaliações do filme (mais recentes primeiro)",
-    responses={404: {"description": "Filme não encontrado"}},
+    responses={**_MOVIE_NOT_FOUND, **validation_response("Parâmetros de consulta inválidos")},
 )
 async def list_reviews(
     session: Annotated[AsyncSession, Depends(get_db)],
@@ -34,10 +35,9 @@ async def list_reviews(
         int, Query(ge=1, le=MAX_PAGE_SIZE, description="Itens por página")
     ] = DEFAULT_PAGE_SIZE,
 ) -> Page[ReviewRead]:
-    try:
-        return await service.list_reviews(session, sk_movie_id, page=page, page_size=page_size)
-    except NotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    """Lista as avaliações do filme; ``created_at`` sai em UTC (sufixo ``Z``)."""
+
+    return await service.list_reviews(session, sk_movie_id, page=page, page_size=page_size)
 
 
 @router.post(
@@ -45,17 +45,13 @@ async def list_reviews(
     response_model=ReviewCreated,
     status_code=status.HTTP_201_CREATED,
     summary="Avaliar filme",
-    responses={
-        404: {"description": "Filme não encontrado"},
-        422: {"description": "Dados inválidos"},
-    },
+    responses={**_MOVIE_NOT_FOUND, **validation_response()},
 )
 async def create_review(
     session: Annotated[AsyncSession, Depends(get_db)],
     sk_movie_id: str,
     data: ReviewCreate,
 ) -> ReviewCreated:
-    try:
-        return await service.create_review(session, sk_movie_id, data)
-    except NotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    """Grava a avaliação (nota de 0 a 10) e devolve a média e a quantidade atualizadas."""
+
+    return await service.create_review(session, sk_movie_id, data)
