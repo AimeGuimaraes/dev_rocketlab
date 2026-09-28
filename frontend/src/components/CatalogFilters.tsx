@@ -10,7 +10,7 @@ import {
   normalizeYear,
   SORT_OPTIONS,
 } from '../lib/catalogParams';
-import { translateGenre } from '../lib/genres';
+import { toGenreOptions } from '../lib/genres';
 
 const YEAR_DEBOUNCE_MS = 600;
 
@@ -39,13 +39,7 @@ function GenreSelect({ value, onChange }: { value: string; onChange: (genreId: s
   const id = useId();
   const { data, isPending, isError } = useGenres();
 
-  const options = useMemo(
-    () =>
-      (data ?? [])
-        .map((genre) => ({ id: genre.sk_genre_id, label: translateGenre(genre.nome_genero) }))
-        .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR')),
-    [data],
-  );
+  const options = useMemo(() => toGenreOptions(data ?? []), [data]);
 
   return (
     <div>

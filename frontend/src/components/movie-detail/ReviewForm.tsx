@@ -3,8 +3,9 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 
 import { useCreateReview } from '../../api/hooks';
-import { ApiError } from '../../api/errors';
 import { formatRating } from '../../lib/format';
+import { applyServerErrors } from '../../lib/formErrors';
+import { errorClass, labelClass, primaryButtonClass, textFieldClass } from '../../lib/formStyles';
 import {
   COMENTARIO_MAX_LENGTH,
   NOME_MAX_LENGTH,
@@ -35,22 +36,7 @@ const RANGE_ADJUST_KEYS = new Set([
 const FIELDS = ['nome', 'nota', 'comentario'] as const;
 type FieldName = (typeof FIELDS)[number];
 
-function isFieldName(field: string): field is FieldName {
-  return (FIELDS as readonly string[]).includes(field);
-}
-
 const DEFAULT_VALUES: ReviewFormValues = { nome: '', nota: null, comentario: '' };
-
-const labelClass = 'block text-sm font-medium text-slate-900';
-const errorClass = 'mt-1 text-sm text-red-700';
-
-function textFieldClass(invalid: boolean): string {
-  return `mt-1 block w-full rounded-md bg-white px-3 py-2 text-slate-900 ring-1 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:outline-none ${
-    invalid
-      ? 'ring-red-500 focus-visible:ring-red-600'
-      : 'ring-slate-300 focus-visible:ring-slate-900'
-  }`;
-}
 
 interface ReviewFormProps {
   movieId: string;
@@ -95,35 +81,12 @@ export function ReviewForm({ movieId, onPublished }: ReviewFormProps) {
     successTimer.current = window.setTimeout(() => setPublished(false), SUCCESS_MESSAGE_MS);
   }
 
-  function applyServerError(error: unknown) {
-    if (!(error instanceof ApiError)) {
-      setError('root.server', { message: GENERIC_ERROR_MESSAGE });
-      return;
-    }
-    const general: string[] = [];
-    let focused = false;
-    for (const item of error.errors ?? []) {
-      if (isFieldName(item.field)) {
-        setError(item.field, { type: 'server', message: item.message }, { shouldFocus: !focused });
-        focused = true;
-      } else {
-        general.push(item.message);
-      }
-    }
-    // Erros sem campo conhecido, 404, rede e 5xx aparecem na mensagem geral.
-    if (!focused || general.length > 0) {
-      setError('root.server', {
-        message: general.length > 0 ? general.join(' ') : error.detail,
-      });
-    }
-  }
-
   async function publish(values: ReviewFormOutput) {
     setPublished(false);
     try {
       await createReview.mutateAsync(values);
     } catch (error) {
-      applyServerError(error);
+      applyServerErrors(error, setError, FIELDS, GENERIC_ERROR_MESSAGE);
       return;
     }
     reset(DEFAULT_VALUES);
@@ -269,7 +232,7 @@ export function ReviewForm({ movieId, onPublished }: ReviewFormProps) {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-700 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+          className={`${primaryButtonClass} w-full sm:w-auto`}
         >
           {isSubmitting ? 'Publicando…' : 'Publicar avaliação'}
         </button>

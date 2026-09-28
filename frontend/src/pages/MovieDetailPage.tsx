@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { Link, useLocation, useParams, useSearchParams } from 'react-router';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 
 import { useMovie } from '../api/hooks';
 import { CrewSection } from '../components/movie-detail/CrewSection';
@@ -10,12 +10,14 @@ import { PerformanceSection } from '../components/movie-detail/PerformanceSectio
 import { ReviewForm } from '../components/movie-detail/ReviewForm';
 import { ReviewList } from '../components/movie-detail/ReviewList';
 import { EmptyState, ErrorState } from '../components/StatusMessage';
-import { getCatalogSearch } from '../lib/catalogLinkState';
+import { APP_NAME, useDocumentTitle } from '../hooks/useDocumentTitle';
+import { type CatalogLinkState, getCatalogSearch } from '../lib/catalogLinkState';
+import { getFlashMessage } from '../lib/flashMessage';
 import { parsePageParam } from '../lib/searchParams';
 
 /** Parâmetro da URL com a página das avaliações. */
 const REVIEWS_PARAM = 'avaliacoes';
-const APP_NAME = 'RocketLab Filmes';
+const FLASH_MESSAGE_MS = 6000;
 
 const linkClass =
   'font-medium text-slate-900 underline hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none';
@@ -24,16 +26,38 @@ const backLinkClass =
 const editLinkClass =
   'rounded-md bg-white px-3 py-2 text-sm font-medium text-slate-900 ring-1 ring-slate-300 transition-colors hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none';
 
-/** Define o título da aba enquanto a página está montada e restaura o anterior ao sair. */
-function useDocumentTitle(title: string | null) {
+/**
+ * Mensagem de sucesso enviada no state da navegação (cadastro/edição).
+ *
+ * O texto entra na região `aria-live` logo depois da montagem, para o leitor de tela anunciar,
+ * e sai do histórico em seguida: recarregar ou voltar à página não repete a mensagem.
+ */
+function useFlashMessage() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [message, setMessage] = useState<string | null>(null);
+
+  const incoming = getFlashMessage(location.state);
+  const catalogSearch = getCatalogSearch(location.state);
+  const { pathname, search } = location;
+
   useEffect(() => {
-    if (title === null) return;
-    const previous = document.title;
-    document.title = title;
-    return () => {
-      document.title = previous;
-    };
-  }, [title]);
+    if (incoming === null) return;
+    const timer = window.setTimeout(() => {
+      setMessage(incoming);
+      const state: CatalogLinkState = { catalogSearch };
+      void navigate({ pathname, search }, { replace: true, state });
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [incoming, catalogSearch, pathname, search, navigate]);
+
+  useEffect(() => {
+    if (message === null) return;
+    const timer = window.setTimeout(() => setMessage(null), FLASH_MESSAGE_MS);
+    return () => window.clearTimeout(timer);
+  }, [message]);
+
+  return { message, dismiss: () => setMessage(null) };
 }
 
 export function MovieDetailPage() {
@@ -41,12 +65,14 @@ export function MovieDetailPage() {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const reviewsRef = useRef<HTMLDivElement>(null);
+  const flash = useFlashMessage();
 
   const rawReviewPage = searchParams.get(REVIEWS_PARAM);
   const reviewPage = parsePageParam(rawReviewPage);
 
   // Sem state (link direto, recarga em outra aba), o "Voltar" leva ao catálogo sem filtros.
-  const backTo = { pathname: '/', search: getCatalogSearch(location.state) };
+  const catalogState: CatalogLinkState = { catalogSearch: getCatalogSearch(location.state) };
+  const backTo = { pathname: '/', search: catalogState.catalogSearch };
 
   const { data: movie, error, isPending, isFetching, refetch } = useMovie(id);
   const notFound = error?.status === 404;
@@ -141,47 +167,67 @@ export function MovieDetailPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        {backLink}
-        <Link
-          to={`/filmes/${encodeURIComponent(movie.sk_movie_id)}/editar`}
-          className={editLinkClass}
-        >
-          Editar
-        </Link>
-      </div>
-
-      <MovieHero movie={movie} />
-
-      <DetailSection title="Sinopse">
-        {movie.sinopse?.trim() ? (
-          <p className="leading-relaxed whitespace-pre-line text-slate-700">{movie.sinopse}</p>
-        ) : (
-          <p className="text-slate-500">Sinopse não disponível.</p>
-        )}
-      </DetailSection>
-
-      <CrewSection movie={movie} />
-
-      {movie.performance && <PerformanceSection performance={movie.performance} />}
-
-      <div ref={reviewsRef} className="scroll-mt-4">
-        <DetailSection title="Avaliações">
-          <div className="flex flex-col gap-6">
-            <ReviewForm
-              key={movie.sk_movie_id}
-              movieId={movie.sk_movie_id}
-              onPublished={resetReviewPage}
-            />
-            <ReviewList
-              movieId={movie.sk_movie_id}
-              page={reviewPage}
-              onPageChange={goToReviewPage}
-            />
+    <>
+      {/* Fica sempre no DOM (fora do `gap`) para o anúncio funcionar quando o texto entra. */}
+      <div role="status" aria-live="polite">
+        {flash.message && (
+          <div className="mb-6 flex items-start justify-between gap-3 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 ring-1 ring-emerald-200">
+            <p>{flash.message}</p>
+            <button
+              type="button"
+              onClick={flash.dismiss}
+              aria-label="Fechar mensagem"
+              className="-my-1 inline-flex size-7 shrink-0 items-center justify-center rounded-md text-emerald-700 hover:bg-emerald-100 focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:outline-none"
+            >
+              <span aria-hidden="true">×</span>
+            </button>
           </div>
-        </DetailSection>
+        )}
       </div>
-    </div>
+
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          {backLink}
+          <Link
+            to={`/filmes/${encodeURIComponent(movie.sk_movie_id)}/editar`}
+            state={catalogState}
+            className={editLinkClass}
+          >
+            Editar
+          </Link>
+        </div>
+
+        <MovieHero movie={movie} />
+
+        <DetailSection title="Sinopse">
+          {movie.sinopse?.trim() ? (
+            <p className="leading-relaxed whitespace-pre-line text-slate-700">{movie.sinopse}</p>
+          ) : (
+            <p className="text-slate-500">Sinopse não disponível.</p>
+          )}
+        </DetailSection>
+
+        <CrewSection movie={movie} />
+
+        {movie.performance && <PerformanceSection performance={movie.performance} />}
+
+        <div ref={reviewsRef} className="scroll-mt-4">
+          <DetailSection title="Avaliações">
+            <div className="flex flex-col gap-6">
+              <ReviewForm
+                key={movie.sk_movie_id}
+                movieId={movie.sk_movie_id}
+                onPublished={resetReviewPage}
+              />
+              <ReviewList
+                movieId={movie.sk_movie_id}
+                page={reviewPage}
+                onPageChange={goToReviewPage}
+              />
+            </div>
+          </DetailSection>
+        </div>
+      </div>
+    </>
   );
 }
