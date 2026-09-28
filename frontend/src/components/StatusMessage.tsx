@@ -29,15 +29,17 @@ export function ErrorState({ message, onRetry, retrying = false }: ErrorStatePro
 
 interface EmptyStateProps {
   title: string;
+  /** `h1` quando o aviso ocupa a página inteira (ex.: "Filme não encontrado"). */
+  as?: 'p' | 'h1';
   /** Texto de apoio e/ou ação (ex.: um link). */
   children?: ReactNode;
 }
 
 /** Aviso de que não há nada a mostrar. */
-export function EmptyState({ title, children }: EmptyStateProps) {
+export function EmptyState({ title, as: Title = 'p', children }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center gap-3 rounded-lg bg-white px-4 py-12 text-center ring-1 ring-slate-200">
-      <p className="text-lg font-semibold text-slate-900">{title}</p>
+      <Title className="text-lg font-semibold text-slate-900">{title}</Title>
       {children && <div className="text-slate-600">{children}</div>}
     </div>
   );

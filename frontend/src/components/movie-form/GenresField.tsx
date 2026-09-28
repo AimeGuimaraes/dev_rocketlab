@@ -47,17 +47,17 @@ export function GenresField({ value, onChange, onBlur, error, inputRef }: Genres
             type="button"
             onClick={() => void refetch()}
             disabled={isFetching}
-            className="rounded-md bg-white px-3 py-1.5 font-medium text-red-800 ring-1 ring-red-300 hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-700 focus-visible:outline-none disabled:opacity-60"
+            className="min-h-11 rounded-md bg-white px-3 py-1.5 font-medium text-red-800 ring-1 ring-red-300 hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-700 focus-visible:outline-none disabled:opacity-60"
           >
             {isFetching ? 'Tentando…' : 'Tentar novamente'}
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-x-4 sm:grid-cols-3">
           {options.map((option, index) => (
             <label
               key={option.id}
-              className="flex cursor-pointer items-center gap-2 rounded-md px-1 py-0.5 text-sm text-slate-900 hover:bg-slate-50"
+              className="flex min-h-11 cursor-pointer items-center gap-2 rounded-md px-1 text-sm text-slate-900 hover:bg-slate-50"
             >
               <input
                 ref={index === 0 ? inputRef : undefined}

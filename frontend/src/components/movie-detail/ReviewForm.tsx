@@ -170,7 +170,7 @@ export function ReviewForm({ movieId, onPublished }: ReviewFormProps) {
                   }}
                   onBlur={field.onBlur}
                   className={`h-2 min-w-48 flex-1 cursor-pointer rounded-md focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 focus-visible:outline-none ${
-                    chosen ? 'accent-amber-500' : 'accent-slate-400 opacity-60'
+                    chosen ? 'accent-amber-500' : 'accent-slate-500'
                   }`}
                 />
                 <div aria-hidden="true" className="flex min-w-36 items-center gap-1.5">

@@ -69,7 +69,13 @@ export function PerformanceSection({ performance }: PerformanceSectionProps) {
 
   return (
     <DetailSection title="Dados financeiros e notas externas">
-      <div className="overflow-x-auto">
+      {/* Em telas estreitas a tabela rola na horizontal; o foco permite rolar pelo teclado. */}
+      <div
+        role="region"
+        aria-label="Valores financeiros"
+        tabIndex={0}
+        className="overflow-x-auto rounded-md focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none"
+      >
         <table className="w-full min-w-[20rem] text-sm">
           <caption className="sr-only">Valores financeiros em dólar e em real</caption>
           <thead>

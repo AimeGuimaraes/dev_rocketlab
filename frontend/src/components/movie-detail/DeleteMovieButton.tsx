@@ -6,9 +6,9 @@ import type { FlashState } from '../../lib/flashMessage';
 import { secondaryButtonClass } from '../../lib/formStyles';
 
 const triggerClass =
-  'rounded-md bg-white px-3 py-2 text-sm font-medium text-red-700 ring-1 ring-red-200 transition-colors hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:outline-none';
+  'min-h-11 rounded-md bg-white px-3 py-2 text-sm font-medium text-red-700 ring-1 ring-red-200 transition-colors hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:outline-none';
 const confirmClass =
-  'inline-flex items-center justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2 focus-visible:outline-none aria-disabled:cursor-not-allowed aria-disabled:opacity-60';
+  'inline-flex min-h-11 items-center justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2 focus-visible:outline-none aria-disabled:cursor-not-allowed aria-disabled:opacity-60';
 
 interface DeleteMovieButtonProps {
   movieId: string;
@@ -84,7 +84,7 @@ export function DeleteMovieButton({ movieId, title, catalogSearch }: DeleteMovie
           if (event.target === event.currentTarget && pressedOnBackdrop.current) close();
           pressedOnBackdrop.current = false;
         }}
-        className="m-auto w-[calc(100%-2rem)] max-w-md rounded-lg bg-white p-0 text-slate-900 shadow-xl backdrop:bg-slate-900/50"
+        className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-md overflow-y-auto rounded-lg bg-white p-0 text-slate-900 shadow-xl backdrop:bg-slate-900/50"
       >
         <div className="flex flex-col gap-4 p-6">
           <h2 id={titleId} className="text-lg font-semibold">

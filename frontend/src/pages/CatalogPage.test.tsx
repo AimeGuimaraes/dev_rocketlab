@@ -30,6 +30,21 @@ describe('CatalogPage', () => {
       within(screen.getByRole('link', { name: /Noite de Tempestade/ })).getByText('Sem avaliações'),
     ).toBeInTheDocument();
     expect(screen.getByText('Página 1 de 2 · 25 filmes')).toBeInTheDocument();
+    expect(document.title).toBe('Catálogo · RocketLab Filmes');
+  });
+
+  it('o link do card tem só o título como nome; ano, gêneros e nota vão na descrição', async () => {
+    renderWithProviders(<CatalogPage />);
+
+    const card = await screen.findByRole('link', { name: 'O Voo da Coruja' });
+    expect(card).toHaveAccessibleName('O Voo da Coruja');
+    expect(card).toHaveAccessibleDescription(/2021/);
+    expect(card).toHaveAccessibleDescription(/Ação/);
+    // O dom-accessibility-api ignora `aria-label` ao calcular descrições (os navegadores não):
+    // confere que a descrição referencia o elemento da nota.
+    const describedBy = (card.getAttribute('aria-describedby') ?? '').split(' ');
+    const rating = within(card).getByRole('img', { name: 'Nota 8,4 de 10, 3 avaliações' });
+    expect(describedBy).toContain(rating.id);
   });
 
   it('a paginação muda ?page e mostra a página seguinte', async () => {

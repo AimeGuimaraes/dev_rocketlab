@@ -36,7 +36,8 @@ export function MovieHero({ movie }: MovieHeroProps) {
           />
           <div
             aria-hidden="true"
-            className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/85 to-slate-950/40 sm:bg-gradient-to-r sm:from-slate-950 sm:via-slate-950/80 sm:to-slate-950/30"
+            // Mínimo de 75% de escurecimento sob o texto: contraste AA sobre qualquer imagem.
+            className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/90 to-slate-950/75 sm:bg-gradient-to-r sm:from-slate-950 sm:via-slate-950/90 sm:to-slate-950/75"
           />
         </>
       )}
@@ -56,7 +57,7 @@ export function MovieHero({ movie }: MovieHeroProps) {
           )}
 
           {releaseDate && (
-            <p className="text-sm text-slate-300">
+            <p className="text-sm text-slate-200">
               Lançamento: <time dateTime={movie.data_lancamento ?? undefined}>{releaseDate}</time>
             </p>
           )}

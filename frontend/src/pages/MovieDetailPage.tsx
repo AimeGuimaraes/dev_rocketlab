@@ -14,6 +14,7 @@ import { ReviewList } from '../components/movie-detail/ReviewList';
 import { EmptyState, ErrorState } from '../components/StatusMessage';
 import { APP_NAME, useDocumentTitle } from '../hooks/useDocumentTitle';
 import { type CatalogLinkState, getCatalogSearch } from '../lib/catalogLinkState';
+import { prefersReducedMotion } from '../lib/motion';
 import { parsePageParam } from '../lib/searchParams';
 
 /** Parâmetro da URL com a página das avaliações. */
@@ -22,9 +23,9 @@ const REVIEWS_PARAM = 'avaliacoes';
 const linkClass =
   'font-medium text-slate-900 underline hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none';
 const backLinkClass =
-  'inline-flex items-center gap-1 rounded-md text-sm font-medium text-slate-700 hover:text-slate-900 hover:underline focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none';
+  'inline-flex min-h-11 items-center gap-1 rounded-md text-sm font-medium text-slate-700 hover:text-slate-900 hover:underline focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none';
 const editLinkClass =
-  'rounded-md bg-white px-3 py-2 text-sm font-medium text-slate-900 ring-1 ring-slate-300 transition-colors hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none';
+  'inline-flex min-h-11 items-center rounded-md bg-white px-3 py-2 text-sm font-medium text-slate-900 ring-1 ring-slate-300 transition-colors hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none';
 
 export function MovieDetailPage() {
   const { id } = useParams();
@@ -74,7 +75,10 @@ export function MovieDetailPage() {
       },
       { state: locationState },
     );
-    reviewsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    reviewsRef.current?.scrollIntoView({
+      behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+      block: 'start',
+    });
   }
 
   // Depois de publicar, volta à primeira página para a nova avaliação aparecer no topo.
@@ -111,7 +115,7 @@ export function MovieDetailPage() {
   if (!movie) {
     if (notFound) {
       return (
-        <EmptyState title="Filme não encontrado">
+        <EmptyState title="Filme não encontrado" as="h1">
           <p>O filme que você procura não existe ou foi removido.</p>
           <Link to={backTo} className={`mt-3 inline-block ${linkClass}`}>
             Voltar ao catálogo

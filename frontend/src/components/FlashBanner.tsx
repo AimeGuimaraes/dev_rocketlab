@@ -14,7 +14,7 @@ export function FlashBanner() {
             type="button"
             onClick={dismiss}
             aria-label="Fechar mensagem"
-            className="-my-1 inline-flex size-7 shrink-0 items-center justify-center rounded-md text-emerald-700 hover:bg-emerald-100 focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:outline-none"
+            className="touch-target relative -my-1 inline-flex size-7 shrink-0 items-center justify-center rounded-md text-emerald-700 hover:bg-emerald-100 focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:outline-none"
           >
             <span aria-hidden="true">×</span>
           </button>

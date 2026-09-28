@@ -12,6 +12,7 @@ import { Pagination } from '../components/Pagination';
 import { SearchBar } from '../components/SearchBar';
 import { EmptyState, ErrorState } from '../components/StatusMessage';
 import type { DraftFieldHandle } from '../hooks/useDebouncedDraft';
+import { APP_NAME, useDocumentTitle } from '../hooks/useDocumentTitle';
 import {
   DEFAULT_SORT,
   defaultOrderFor,
@@ -29,7 +30,8 @@ import { parsePageParam } from '../lib/searchParams';
 
 const PAGE_SIZE = 20;
 
-const linkClass = 'font-medium text-slate-900 underline hover:text-slate-600';
+const linkClass =
+  'font-medium text-slate-900 underline hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none';
 const buttonClass =
   'mt-2 rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-700 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 focus-visible:outline-none';
 
@@ -42,6 +44,8 @@ export function CatalogPage() {
   const canReset = filtered || isCustomSort(filters);
   const searchRef = useRef<DraftFieldHandle>(null);
   const yearRef = useRef<DraftFieldHandle>(null);
+
+  useDocumentTitle(`Catálogo · ${APP_NAME}`);
 
   const { data: genres } = useGenres();
   const genreName = genres?.find((genre) => genre.sk_genre_id === filters.genreId)?.nome_genero;

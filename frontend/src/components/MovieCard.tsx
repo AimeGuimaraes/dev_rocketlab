@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { Link, useLocation } from 'react-router';
 
 import type { MovieListItem } from '../api/types';
@@ -15,15 +16,28 @@ interface MovieCardProps {
 /**
  * Card do catálogo; o card inteiro leva ao detalhe do filme, levando junto a busca atual do
  * catálogo para que o "Voltar" do detalhe restaure filtros e página.
+ *
+ * O nome acessível do link é só o título; ano, gêneros e nota entram como descrição.
  */
 export function MovieCard({ movie }: MovieCardProps) {
   const location = useLocation();
   const state: CatalogLinkState = { catalogSearch: location.search };
+  const id = useId();
+  const ids = {
+    title: `${id}-titulo`,
+    year: `${id}-ano`,
+    genres: `${id}-generos`,
+    rating: `${id}-nota`,
+  };
+  const hasGenres = movie.generos.length > 0;
+  const describedBy = [ids.year, hasGenres && ids.genres, ids.rating].filter(Boolean).join(' ');
 
   return (
     <Link
       to={`/filmes/${encodeURIComponent(movie.sk_movie_id)}`}
       state={state}
+      aria-labelledby={ids.title}
+      aria-describedby={describedBy}
       className="group block h-full rounded-lg bg-white shadow-sm ring-1 ring-slate-200 transition hover:shadow-md hover:ring-slate-300 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none"
     >
       <article className="flex h-full flex-col">
@@ -31,12 +45,18 @@ export function MovieCard({ movie }: MovieCardProps) {
           <Poster title={movie.titulo} url={movie.url_poster} />
         </div>
         <div className="flex flex-1 flex-col gap-1.5 p-3">
-          <h2 className="line-clamp-2 leading-snug font-semibold text-slate-900 group-hover:underline">
+          <h2
+            id={ids.title}
+            className="line-clamp-2 leading-snug font-semibold text-slate-900 group-hover:underline"
+          >
             {movie.titulo}
           </h2>
-          <p className="text-sm text-slate-600">{movie.ano_lancamento ?? 'Ano desconhecido'}</p>
-          {movie.generos.length > 0 && (
-            <ul className="flex flex-wrap gap-1" aria-label="Gêneros">
+          <p id={ids.year} className="text-sm text-slate-600">
+            {movie.ano_lancamento ?? 'Ano desconhecido'}
+          </p>
+          {hasGenres && (
+            // Sem `aria-label`: ele substituiria os nomes dos gêneros na descrição do link.
+            <ul id={ids.genres} className="flex flex-wrap gap-1">
               {movie.generos.slice(0, MAX_GENRES).map((genre) => (
                 <li
                   key={genre}
@@ -48,7 +68,12 @@ export function MovieCard({ movie }: MovieCardProps) {
             </ul>
           )}
           <div className="mt-auto pt-1">
-            <RatingDisplay size="sm" value={movie.nota_media} count={movie.qtd_avaliacoes} />
+            <RatingDisplay
+              id={ids.rating}
+              size="sm"
+              value={movie.nota_media}
+              count={movie.qtd_avaliacoes}
+            />
           </div>
         </div>
       </article>

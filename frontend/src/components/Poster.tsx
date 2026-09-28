@@ -40,7 +40,7 @@ export function Poster({ title, url, loading = 'lazy' }: PosterProps) {
     return (
       <div
         aria-hidden="true"
-        className="flex size-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-slate-200 to-slate-300 text-slate-500"
+        className="flex size-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-slate-200 to-slate-300 text-slate-600"
       >
         <FilmIcon />
         <span className="text-2xl font-bold tracking-wide">{initials(title)}</span>

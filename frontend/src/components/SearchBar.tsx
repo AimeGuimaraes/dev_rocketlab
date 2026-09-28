@@ -68,7 +68,7 @@ export function SearchBar({ value, onSearch, ref }: SearchBarProps) {
       <label htmlFor={inputId} className="sr-only">
         Buscar por título
       </label>
-      <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+      <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-500">
         <SearchIcon />
       </span>
       <input
@@ -83,14 +83,14 @@ export function SearchBar({ value, onSearch, ref }: SearchBarProps) {
         onKeyDown={(event) => {
           if (event.key === 'Enter') flush();
         }}
-        className="h-10 w-full rounded-md bg-white pr-10 pl-10 text-slate-900 ring-1 ring-slate-300 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none [&::-webkit-search-cancel-button]:hidden"
+        className="h-11 w-full rounded-md bg-white pr-12 pl-10 text-slate-900 ring-1 ring-slate-500 placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none [&::-webkit-search-cancel-button]:hidden"
       />
       {draft !== '' && (
         <button
           type="button"
           onClick={clear}
           aria-label="Limpar busca"
-          className="absolute inset-y-0 right-1 my-auto inline-flex size-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none"
+          className="touch-target absolute inset-y-0 right-1.5 my-auto inline-flex size-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none"
         >
           <ClearIcon />
         </button>

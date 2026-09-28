@@ -81,7 +81,7 @@ export function MovieEditPage() {
     }
     if (notFound) {
       return (
-        <EmptyState title="Filme não encontrado">
+        <EmptyState title="Filme não encontrado" as="h1">
           <p>O filme que você quer editar não existe ou foi removido.</p>
           <Link to="/" className={`mt-3 inline-block ${linkClass}`}>
             Voltar ao catálogo

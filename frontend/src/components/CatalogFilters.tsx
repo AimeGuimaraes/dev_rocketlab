@@ -16,9 +16,9 @@ const YEAR_DEBOUNCE_MS = 600;
 
 const labelClass = 'mb-1 block text-sm font-medium text-slate-700';
 const controlClass =
-  'h-10 w-full rounded-md bg-white px-3 text-slate-900 ring-1 ring-slate-300 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500';
+  'h-11 w-full rounded-md bg-white px-3 text-slate-900 ring-1 ring-slate-500 placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500';
 const buttonClass =
-  'inline-flex h-10 items-center justify-center gap-1.5 rounded-md bg-white px-3 text-sm font-medium whitespace-nowrap text-slate-700 ring-1 ring-slate-300 transition-colors hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none';
+  'inline-flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-md bg-white px-3 text-sm font-medium whitespace-nowrap text-slate-700 ring-1 ring-slate-300 transition-colors hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none';
 
 function ArrowIcon({ direction }: { direction: 'up' | 'down' }) {
   return (

@@ -9,6 +9,8 @@ interface RatingDisplayProps {
   count?: number;
   showCount?: boolean;
   size?: RatingSize;
+  /** Permite referenciar a nota (ex.: `aria-describedby` do card do catálogo). */
+  id?: string;
 }
 
 const STAR_COUNT = 5;
@@ -48,11 +50,16 @@ export function RatingDisplay({
   count,
   showCount = false,
   size = 'md',
+  id,
 }: RatingDisplayProps) {
   const classes = sizeClasses[size];
 
   if (value === null || count === 0) {
-    return <span className={`${classes.text} text-slate-500`}>Sem avaliações</span>;
+    return (
+      <span id={id} className={`${classes.text} text-slate-500`}>
+        Sem avaliações
+      </span>
+    );
   }
 
   const formatted = formatRating(value);
@@ -62,7 +69,7 @@ export function RatingDisplay({
       : `Nota ${formatted} de 10, ${reviewCountLabel(count)}`;
 
   return (
-    <span role="img" aria-label={label} className="inline-flex items-center gap-1.5">
+    <span id={id} role="img" aria-label={label} className="inline-flex items-center gap-1.5">
       <span className="flex text-amber-500">
         {starFills(value).map((fill, index) => (
           <span key={index} className={`relative ${classes.star}`}>

@@ -15,7 +15,7 @@ interface DirectorsFieldProps {
 
 const legendClass = 'text-base font-semibold text-slate-900';
 const addButtonClass =
-  'mt-1 inline-flex h-10 shrink-0 items-center justify-center rounded-md bg-white px-4 text-sm font-medium text-slate-900 ring-1 ring-slate-300 transition-colors hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none';
+  'mt-1 inline-flex h-11 shrink-0 items-center justify-center rounded-md bg-white px-4 text-sm font-medium text-slate-900 ring-1 ring-slate-300 transition-colors hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none';
 
 /** Lista de diretores: campo com "Adicionar" (ou Enter) e chips removíveis. */
 export function DirectorsField({
@@ -124,7 +124,8 @@ export function DirectorsField({
       </div>
 
       {value.length > 0 ? (
-        <ul className="flex flex-wrap gap-2" aria-label="Diretores adicionados">
+        // `gap-3`: as áreas de toque ampliadas dos botões "Remover" não se sobrepõem.
+        <ul className="flex flex-wrap gap-3" aria-label="Diretores adicionados">
           {value.map((name, index) => (
             <li
               key={name}
@@ -135,7 +136,7 @@ export function DirectorsField({
                 type="button"
                 onClick={() => remove(index)}
                 aria-label={`Remover ${name}`}
-                className="inline-flex size-6 shrink-0 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none"
+                className="touch-target relative inline-flex size-6 shrink-0 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none"
               >
                 <span aria-hidden="true">×</span>
               </button>

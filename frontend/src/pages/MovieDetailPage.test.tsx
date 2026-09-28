@@ -146,9 +146,10 @@ describe('MovieDetailPage', () => {
     server.use(http.get(MOVIE_URL, () => errorResponse(404, { detail: 'Filme não encontrado.' })));
     setup();
 
-    expect(await screen.findByText('Filme não encontrado')).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Filme não encontrado' }),
+    ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Voltar ao catálogo' })).toHaveAttribute('href', '/');
-    expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();
     expect(document.title).toBe('Filme não encontrado · RocketLab Filmes');
   });
 });
