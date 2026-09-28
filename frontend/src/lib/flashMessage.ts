@@ -16,3 +16,11 @@ export function getFlashMessage(state: unknown): string | null {
   }
   return null;
 }
+
+/** Devolve o state sem a mensagem, preservando o resto (ex.: a busca do catálogo de origem). */
+export function withoutFlash(state: unknown): unknown {
+  if (typeof state !== 'object' || state === null || !('flash' in state)) return state;
+  const rest: Record<string, unknown> = { ...state };
+  delete rest.flash;
+  return rest;
+}

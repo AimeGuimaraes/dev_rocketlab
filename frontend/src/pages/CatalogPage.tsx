@@ -4,6 +4,7 @@ import { Link, useSearchParams } from 'react-router';
 import { useGenres, useMovies } from '../api/hooks';
 import type { MovieSort } from '../api/types';
 import { CatalogFilters } from '../components/CatalogFilters';
+import { FlashBanner } from '../components/FlashBanner';
 import { MovieCard, MovieCardSkeleton } from '../components/MovieCard';
 import { MovieGrid } from '../components/MovieGrid';
 import { PageHeader } from '../components/PageHeader';
@@ -201,6 +202,7 @@ export function CatalogPage() {
   return (
     <>
       <PageHeader title="Catálogo de filmes" />
+      <FlashBanner />
       <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-end">
         <SearchBar ref={searchRef} value={filters.q} onSearch={handleSearch} />
         <CatalogFilters
