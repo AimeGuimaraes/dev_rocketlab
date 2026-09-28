@@ -7,6 +7,7 @@ import { DetailSection } from '../components/movie-detail/DetailSection';
 import { MovieDetailSkeleton } from '../components/movie-detail/MovieDetailSkeleton';
 import { MovieHero } from '../components/movie-detail/MovieHero';
 import { PerformanceSection } from '../components/movie-detail/PerformanceSection';
+import { ReviewForm } from '../components/movie-detail/ReviewForm';
 import { ReviewList } from '../components/movie-detail/ReviewList';
 import { EmptyState, ErrorState } from '../components/StatusMessage';
 import { getCatalogSearch } from '../lib/catalogLinkState';
@@ -85,6 +86,18 @@ export function MovieDetailPage() {
     reviewsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  // Depois de publicar, volta à primeira página para a nova avaliação aparecer no topo.
+  function resetReviewPage() {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete(REVIEWS_PARAM);
+        return next;
+      },
+      { replace: true, state: locationState },
+    );
+  }
+
   const backLink = (
     <Link to={backTo} className={backLinkClass}>
       <span aria-hidden="true">←</span> Voltar ao catálogo
@@ -155,7 +168,18 @@ export function MovieDetailPage() {
 
       <div ref={reviewsRef} className="scroll-mt-4">
         <DetailSection title="Avaliações">
-          <ReviewList movieId={movie.sk_movie_id} page={reviewPage} onPageChange={goToReviewPage} />
+          <div className="flex flex-col gap-6">
+            <ReviewForm
+              key={movie.sk_movie_id}
+              movieId={movie.sk_movie_id}
+              onPublished={resetReviewPage}
+            />
+            <ReviewList
+              movieId={movie.sk_movie_id}
+              page={reviewPage}
+              onPageChange={goToReviewPage}
+            />
+          </div>
         </DetailSection>
       </div>
     </div>
