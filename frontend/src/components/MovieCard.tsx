@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 
 import type { MovieListItem } from '../api/types';
+import { translateGenre } from '../lib/genres';
 import { RatingDisplay } from './RatingDisplay';
 
 const MAX_GENRES = 3;
@@ -85,7 +86,7 @@ export function MovieCard({ movie }: MovieCardProps) {
                   key={genre}
                   className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700"
                 >
-                  {genre}
+                  {translateGenre(genre)}
                 </li>
               ))}
             </ul>
