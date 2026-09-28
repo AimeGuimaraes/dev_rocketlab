@@ -13,6 +13,9 @@ dist-ssr
 *.local
 coverage
 
+# OpenAPI gerado a partir do app (usado por gen:api:file / CI)
+openapi.json
+
 # Variáveis de ambiente (só o exemplo é versionado)
 .env
 .env.*
