@@ -1,73 +1,29 @@
-import { useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useLocation } from 'react-router';
 
 import type { MovieListItem } from '../api/types';
+import type { CatalogLinkState } from '../lib/catalogLinkState';
 import { translateGenre } from '../lib/genres';
+import { Poster } from './Poster';
 import { RatingDisplay } from './RatingDisplay';
 
 const MAX_GENRES = 3;
-
-/** Até duas iniciais do título, para o poster de reserva. */
-function initials(title: string): string {
-  const words = title.match(/[\p{L}\p{N}]+/gu) ?? [];
-  return words
-    .slice(0, 2)
-    .map((word) => word.charAt(0).toUpperCase())
-    .join('');
-}
-
-function FilmIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      aria-hidden="true"
-      className="size-8"
-    >
-      <rect x="3" y="4" width="18" height="16" rx="2" />
-      <path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4" />
-    </svg>
-  );
-}
-
-function Poster({ title, url }: { title: string; url: string | null }) {
-  const [failed, setFailed] = useState(false);
-
-  if (!url || failed) {
-    return (
-      <div
-        aria-hidden="true"
-        className="flex size-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-slate-200 to-slate-300 text-slate-500"
-      >
-        <FilmIcon />
-        <span className="text-2xl font-bold tracking-wide">{initials(title)}</span>
-      </div>
-    );
-  }
-
-  return (
-    <img
-      src={url}
-      alt={`Pôster de ${title}`}
-      loading="lazy"
-      decoding="async"
-      onError={() => setFailed(true)}
-      className="size-full object-cover"
-    />
-  );
-}
 
 interface MovieCardProps {
   movie: MovieListItem;
 }
 
-/** Card do catálogo; o card inteiro leva ao detalhe do filme. */
+/**
+ * Card do catálogo; o card inteiro leva ao detalhe do filme, levando junto a busca atual do
+ * catálogo para que o "Voltar" do detalhe restaure filtros e página.
+ */
 export function MovieCard({ movie }: MovieCardProps) {
+  const location = useLocation();
+  const state: CatalogLinkState = { catalogSearch: location.search };
+
   return (
     <Link
       to={`/filmes/${encodeURIComponent(movie.sk_movie_id)}`}
+      state={state}
       className="group block h-full rounded-lg bg-white shadow-sm ring-1 ring-slate-200 transition hover:shadow-md hover:ring-slate-300 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none"
     >
       <article className="flex h-full flex-col">

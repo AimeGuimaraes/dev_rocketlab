@@ -24,6 +24,7 @@ import {
 } from '../lib/catalogParams';
 import { formatInteger } from '../lib/format';
 import { translateGenre } from '../lib/genres';
+import { parsePageParam } from '../lib/searchParams';
 
 const PAGE_SIZE = 20;
 
@@ -31,17 +32,10 @@ const linkClass = 'font-medium text-slate-900 underline hover:text-slate-600';
 const buttonClass =
   'mt-2 rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-700 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 focus-visible:outline-none';
 
-/** Lê `?page=` da URL; qualquer valor que não seja um inteiro ≥ 1 vira a página 1. */
-function parsePage(raw: string | null): number {
-  if (raw === null || !/^\d+$/.test(raw)) return 1;
-  const page = Number(raw);
-  return Number.isSafeInteger(page) && page > 0 ? page : 1;
-}
-
 export function CatalogPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const rawPage = searchParams.get('page');
-  const page = parsePage(rawPage);
+  const page = parsePageParam(rawPage);
   const filters = parseCatalogParams(searchParams);
   const filtered = hasActiveFilters(filters);
   const canReset = filtered || isCustomSort(filters);
